@@ -12,24 +12,24 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #1a1a1a; /* پس‌زمینه دارک */
+            background-color: #1a1a1a;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             flex-direction: column;
-            color: #e0e0e0; /* رنگ متن روشن برای تم دارک */
+            color: #e0e0e0;
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
-            touch-action: manipulation; /* برای جلوگیری از زوم و اسکرول ناخواسته در موبایل */
+            touch-action: manipulation; /* جلوگیری از زوم و اسکرول ناخواسته */
         }
         canvas {
-            border: 2px solid #555; /* حاشیه تیره برای بوم */
-            background-color: #333; /* پس‌زمینه بوم تیره */
+            border: 2px solid #555;
+            background-color: #333;
             display: block;
-            touch-action: none; /* جلوگیری از اسکرول و زوم در موبایل */
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* سایه برای عمق */
-            border-radius: 8px; /* گوشه‌های گرد */
-            /* ابعاد canvas از طریق JS تنظیم می‌شود، اما این max-width/height یک محافظ است */
+            touch-action: none; /* مهم برای لمس در بازی */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            /* اینها بیشتر محافظ هستند، ابعاد اصلی از JS تنظیم می‌شود */
             max-width: 98vw;
             max-height: 90vh;
         }
@@ -38,23 +38,23 @@
             top: 15px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: clamp(1.8em, 6vw, 3em); /* فونت واکنش‌گرا و کمی بزرگ‌تر */
+            font-size: clamp(1.5em, 5vw, 2.5em); /* فونت واکنش‌گرا: حداقل 1.5em، حداکثر 2.5em، متناسب با 5vw */
             font-weight: bold;
-            color: white; /* رنگ سفید خالی */
-            text-shadow: none; /* بدون سایه */
+            color: white;
+            text-shadow: none;
             white-space: nowrap;
-            letter-spacing: 0; /* بدون فاصله بین حروف */
+            letter-spacing: 0;
             z-index: 10;
         }
         #scoreContainer {
             margin-bottom: 20px;
-            font-size: clamp(1.1em, 4vw, 1.8em); /* فونت واکنش‌گرا و کمی بزرگ‌تر */
+            font-size: clamp(0.9em, 3.5vw, 1.5em); /* فونت واکنش‌گرا برای امتیاز */
             font-weight: bold;
-            color: #fdd835; /* زرد طلایی برای امتیازات */
+            color: #fdd835;
             display: flex;
-            gap: clamp(15px, 4vw, 40px); /* فاصله واکنش‌گرا */
+            gap: clamp(10px, 3vw, 30px);
             background-color: #444;
-            padding: 12px 25px;
+            padding: 10px 20px;
             border-radius: 15px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
             z-index: 10;
@@ -72,7 +72,7 @@
         }
         .score-label {
             font-size: 0.7em;
-            margin-bottom: 5px;
+            margin-bottom: 3px; /* فاصله کمتر */
             color: #bdbdbd;
         }
         .score-value {
@@ -92,20 +92,20 @@
             align-items: center;
             flex-direction: column;
             text-align: center;
-            font-size: clamp(1.8em, 7vw, 2.5em);
+            font-size: clamp(1.5em, 6vw, 2.2em); /* فونت واکنش‌گرا */
             color: white;
             text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
             z-index: 20;
         }
         #gameOverScreen p {
-            margin: 15px 0;
-            line-height: 1.4;
+            margin: 10px 0; /* فاصله کمتر */
+            line-height: 1.3;
         }
         .promo-message {
-            font-size: clamp(1em, 4vw, 1.5em);
+            font-size: clamp(0.9em, 3.5vw, 1.3em); /* فونت واکنش‌گرا */
             color: #a7ffeb;
             font-weight: bold;
-            margin-top: 20px;
+            margin-top: 15px; /* فاصله کمتر */
             animation: pulse 1.5s infinite alternate;
         }
         @keyframes pulse {
@@ -113,9 +113,9 @@
             100% { transform: scale(1.05); opacity: 0.9; }
         }
         #gameOverScreen button {
-            padding: 18px 35px;
-            font-size: clamp(0.8em, 3.5vw, 1em);
-            margin-top: 40px;
+            padding: 15px 30px;
+            font-size: clamp(0.7em, 3vw, 0.9em); /* فونت واکنش‌گرا */
+            margin-top: 30px;
             cursor: pointer;
             background-color: #00bcd4;
             color: white;
