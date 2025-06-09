@@ -20,47 +20,46 @@ let lastObstacleTime = 0;
 let lastCloudTime = 0;
 
 // === ابعاد پایه برای طراحی بازی (ابعاد منطقی) ===
-// تمامی محاسبات و طراحی بازی بر اساس این ابعاد انجام می‌شود.
-// سپس این ابعاد منطقی به ابعاد واقعی Canvas (که ممکن است کوچک‌تر یا بزرگ‌تر باشند)
-// مقیاس‌بندی می‌شوند.
-const LOGICAL_CANVAS_WIDTH = 800;
-const LOGICAL_CANVAS_HEIGHT = 200;
-const LOGICAL_GROUND_Y_OFFSET = 20; // فاصله زمین از پایین در ابعاد منطقی
+// این ابعاد، ابعادی هستند که بازی بر اساس آنها "طراحی" شده است.
+// این ابعاد را برای Mobile-First به 400x120 تغییر می‌دهیم.
+const LOGICAL_CANVAS_WIDTH = 400;
+const LOGICAL_CANVAS_HEIGHT = 120;
+const LOGICAL_GROUND_Y_OFFSET = 15; // فاصله زمین از پایین در ابعاد منطقی
 
-let currentLogicalCanvasWidth = LOGICAL_CANVAS_WIDTH; // عرض منطقی فعلی (که تغییر نمی‌کند)
-let currentLogicalCanvasHeight = LOGICAL_CANVAS_HEIGHT; // ارتفاع منطقی فعلی (که تغییر نمی‌کند)
+let currentLogicalCanvasWidth = LOGICAL_CANVAS_WIDTH; 
+let currentLogicalCanvasHeight = LOGICAL_CANVAS_HEIGHT; 
 let scaleFactor = 1; // ضریب مقیاس‌بندی از ابعاد منطقی به ابعاد واقعی Canvas
 
 // === تنظیمات عمومی (بر اساس ابعاد منطقی) ===
-const BASE_JUMP_VELOCITY = -10;
-const BASE_GRAVITY = 0.5;
-const BASE_GAME_SPEED = 4; // سرعت پایه بازی
+const BASE_JUMP_VELOCITY = -5.5; // سرعت پرش کمتر برای ابعاد کوچکتر
+const BASE_GRAVITY = 0.3; // جاذبه کمتر برای ابعاد کوچکتر
+const BASE_GAME_SPEED = 3; // سرعت پایه بازی کمتر برای ابعاد کوچکتر
 
 // === تنظیمات شخصیت (روباه - بر اساس ابعاد منطقی) ===
-const BASE_FOX_WIDTH = 40;
-const BASE_FOX_HEIGHT = 45;
-const FOX_START_X_RATIO = 0.06; // موقعیت X بر اساس نسبت عرض بوم منطقی
+const BASE_FOX_WIDTH = 25; // عرض روباه کوچک‌تر
+const BASE_FOX_HEIGHT = 30; // ارتفاع روباه کوچک‌تر
+const FOX_START_X_RATIO = 0.08; 
 
 // === تنظیمات موانع (بر اساس ابعاد منطقی) ===
-const BASE_OBSTACLE_MIN_GAP_RATIO = 0.3;
-const BASE_OBSTACLE_MAX_GAP_RATIO = 0.5;
+const BASE_OBSTACLE_MIN_GAP_RATIO = 0.4; // فاصله موانع کمی بیشتر
+const BASE_OBSTACLE_MAX_GAP_RATIO = 0.7;
 const OBSTACLE_COLOR = '#ff1744';
 
 const BASE_OBSTACLE_TYPES = [
-    { type: 'block_low', width: 25, height: 40 },
-    { type: 'block_high', width: 25, height: 60 },
-    { type: 'flying_low', width: 40, height: 20, yOffset: 30 },
-    { type: 'flying_mid', width: 40, height: 20, yOffset: 55 },
-    { type: 'stacked_2', width: 25, height: 70, segments: 2 },
-    { type: 'stacked_3', width: 25, height: 90, segments: 3 }
+    { type: 'block_low', width: 15, height: 25 }, // ابعاد موانع کوچک‌تر
+    { type: 'block_high', width: 15, height: 40 },
+    { type: 'flying_low', width: 25, height: 15, yOffset: 20 }, // پرنده پایین
+    { type: 'flying_mid', width: 25, height: 15, yOffset: 35 }, // پرنده میانی
+    { type: 'stacked_2', width: 15, height: 50, segments: 2 }, // دو بلوک روی هم
+    { type: 'stacked_3', width: 15, height: 65, segments: 3 } // سه بلوک روی هم
 ];
 
 // === تنظیمات ابرها (بر اساس ابعاد منطقی) ===
-const BASE_CLOUD_WIDTH = 60;
-const BASE_CLOUD_HEIGHT = 20;
+const BASE_CLOUD_WIDTH = 40;
+const BASE_CLOUD_HEIGHT = 15;
 const CLOUD_COLOR = '#b0bec5';
-const BASE_CLOUD_MIN_GAP_RATIO = 0.2;
-const BASE_CLOUD_MAX_GAP_RATIO = 0.6;
+const BASE_CLOUD_MIN_GAP_RATIO = 0.3;
+const BASE_CLOUD_MAX_GAP_RATIO = 0.8;
 
 // === تنظیمات زمین (بر اساس ابعاد منطقی) ===
 const GROUND_COLOR = '#555';
@@ -107,8 +106,7 @@ function drawFox(x, y, width, height) {
     // گوش‌ها
     ctx.beginPath();
     ctx.moveTo(x + width * 0.2, y + height * 0.05);
-    ctx.lineTo(x + width * 0.1, y - 5); // این 5 پیکسل وابسته به مقیاس نیست، به همین دلیل قبلا مشکل داشت.
-                                        // حالا با scaleFactor ضرب میشن: 5 * scaleFactor
+    ctx.lineTo(x + width * 0.1, y - 5); 
     ctx.lineTo(x + width * 0.3, y - 5);
     ctx.closePath();
     ctx.fill();
@@ -123,20 +121,20 @@ function drawFox(x, y, width, height) {
     // چشم‌ها
     ctx.fillStyle = 'black';
     ctx.beginPath();
-    ctx.arc(x + width * 0.4, y + height * 0.15, 2, 0, Math.PI * 2); // 2 پیکسل
-    ctx.arc(x + width * 0.6, y + height * 0.15, 2, 0, Math.PI * 2); // 2 پیکسل
+    ctx.arc(x + width * 0.4, y + height * 0.15, 2, 0, Math.PI * 2); 
+    ctx.arc(x + width * 0.6, y + height * 0.15, 2, 0, Math.PI * 2); 
     ctx.fill();
 
     // بینی
     ctx.beginPath();
-    ctx.arc(x + width * 0.5, y + height * 0.25, 2, 0, Math.PI * 2); // 2 پیکسل
+    ctx.arc(x + width * 0.5, y + height * 0.25, 2, 0, Math.PI * 2); 
     ctx.fill();
 
     // دم
     ctx.fillStyle = FOX_COLOR;
     ctx.beginPath();
     ctx.moveTo(x, y + height * 0.7);
-    ctx.lineTo(x - 10, y + height * 0.5); // 10 پیکسل
+    ctx.lineTo(x - 10, y + height * 0.5); 
     ctx.lineTo(x, y + height * 0.3);
     ctx.closePath();
     ctx.fill();
@@ -147,10 +145,10 @@ function drawFox(x, y, width, height) {
 
 class Player {
     constructor() {
-        this.width = BASE_FOX_WIDTH; // اینها ابعاد منطقی هستند
+        this.width = BASE_FOX_WIDTH; 
         this.height = BASE_FOX_HEIGHT;
         this.x = LOGICAL_CANVAS_WIDTH * FOX_START_X_RATIO;
-        this.y = LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height; // استفاده از ابعاد منطقی
+        this.y = LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height; 
         this.velocityY = 0;
         this.jumps = 0;
         this.maxJumps = 2;
@@ -162,9 +160,8 @@ class Player {
 
     update() {
         this.y += this.velocityY;
-        this.velocityY += BASE_GRAVITY; // جاذبه هم مقیاس‌بندی شده در draw
+        this.velocityY += BASE_GRAVITY; 
 
-        // برخورد با زمین منطقی
         if (this.y >= LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height) {
             this.y = LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height;
             this.velocityY = 0;
@@ -188,7 +185,7 @@ class Obstacle {
         this.type = type;
         this.width = typeData.width;
         this.height = typeData.height;
-        this.x = LOGICAL_CANVAS_WIDTH; // شروع از لبه راست منطقی
+        this.x = LOGICAL_CANVAS_WIDTH; 
         this.y = LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height;
         if (typeData.yOffset) {
             this.y -= typeData.yOffset;
@@ -201,7 +198,7 @@ class Obstacle {
         if (this.type.includes('block')) {
             ctx.fillRect(this.x, this.y, this.width, this.height);
             ctx.strokeStyle = '#c62828';
-            ctx.lineWidth = 2; // ضخامت خطوط
+            ctx.lineWidth = 2; 
             for (let i = 0; i < this.segments; i++) {
                 ctx.strokeRect(this.x, this.y + (this.height / this.segments) * i, this.width, this.height / this.segments);
             }
@@ -235,7 +232,7 @@ class Cloud {
         this.height = BASE_CLOUD_HEIGHT;
         this.x = LOGICAL_CANVAS_WIDTH;
         this.y = Math.random() * (LOGICAL_CANVAS_HEIGHT / 2 - this.height);
-        this.speed = BASE_GAME_SPEED * (0.2 + Math.random() * 0.4); // سرعت ابرها به صورت منطقی
+        this.speed = BASE_GAME_SPEED * (0.2 + Math.random() * 0.4); 
     }
 
     draw() {
@@ -244,16 +241,16 @@ class Cloud {
     }
 
     update() {
-        this.x -= this.speed; // سرعت ابرها با سرعت بازی اصلی مقیاس‌بندی نمی‌شود
+        this.x -= this.speed;
     }
 }
 
 class Ground {
     constructor(x) {
-        this.x = x; // موقعیت X منطقی
+        this.x = x; 
         this.y = LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET;
-        this.width = LOGICAL_CANVAS_WIDTH * 2; // عرض منطقی زمین
-        this.height = LOGICAL_GROUND_Y_OFFSET; // ارتفاع منطقی زمین
+        this.width = LOGICAL_CANVAS_WIDTH * 2; 
+        this.height = LOGICAL_GROUND_Y_OFFSET; 
     }
 
     draw() {
@@ -268,7 +265,6 @@ class Ground {
     update() {
         this.x -= gameSpeed;
         if (this.x + this.width < 0) {
-            // تایل رو به انتهای مجموعه بفرست، بر اساس عرض منطقی
             this.x = this.x + this.width * 2;
         }
     }
@@ -276,25 +272,29 @@ class Ground {
 
 // === توابع مقیاس‌بندی و تنظیم Canvas ===
 
-// محاسبه مقیاس‌بندی بر اساس ابعاد واقعی صفحه و بوم منطقی
 function calculateScaleFactor() {
     const dpr = window.devicePixelRatio || 1;
     
-    // ابعاد واقعی viewport
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
     // حداکثر ابعاد CSS که canvas می‌تواند اشغال کند
-    const maxCssWidth = screenWidth * 0.98; // 98% از عرض صفحه
-    const maxCssHeight = screenHeight * 0.90; // 90% از ارتفاع صفحه (برای فضای UI بالا و پایین)
+    // این مقادیر از CSS max-width/height هم تبعیت می‌کنند
+    let maxCssWidth = screenWidth * 0.98; 
+    let maxCssHeight = screenHeight * 0.90; 
+
+    // اگر ارتفاع viewport خیلی کم باشد (مثل حالت افقی موبایل با کیبورد باز)
+    // ارتفاع maxCssHeight را بیشتر کاهش می‌دهیم
+    if (screenHeight < 300) { // اگر ارتفاع صفحه خیلی کم بود
+        maxCssHeight = screenHeight * 0.80; 
+    }
 
     let desiredCssWidth;
     let desiredCssHeight;
 
-    // محاسبه ابعاد CSS Canvas با حفظ نسبت ابعاد منطقی
     const logicalAspectRatio = LOGICAL_CANVAS_WIDTH / LOGICAL_CANVAS_HEIGHT;
 
-    // ابتدا بر اساس عرض صفحه محاسبه می‌کنیم
+    // رویکرد Mobile-First: ابتدا بر اساس عرض صفحه محاسبه می‌کنیم
     desiredCssWidth = maxCssWidth;
     desiredCssHeight = desiredCssWidth / logicalAspectRatio;
 
@@ -304,23 +304,28 @@ function calculateScaleFactor() {
         desiredCssWidth = desiredCssHeight * logicalAspectRatio;
     }
 
-    // اطمینان از حداقل ابعاد (برای صفحه‌های خیلی کوچک)
+    // اطمینان از حداقل ابعاد برای صفحه‌های خیلی کوچک (مثلاً 250x75)
     if (desiredCssWidth < 250) desiredCssWidth = 250;
-    if (desiredCssHeight < 60) desiredCssHeight = 60;
+    if (desiredCssHeight < 75) desiredCssHeight = 75;
 
 
-    // تنظیم ابعاد CSS Canvas
+    // تنظیم ابعاد بصری Canvas (CSS)
     canvas.style.width = `${desiredCssWidth}px`;
     canvas.style.height = `${desiredCssHeight}px`;
 
     // تنظیم ابعاد واقعی Canvas برای رندر HiDPI
+    // این ابعاد، فضایی را تعریف می‌کند که `ctx` در آن رسم می‌کند
     canvas.width = Math.floor(desiredCssWidth * dpr);
     canvas.height = Math.floor(desiredCssHeight * dpr);
 
-    // مقیاس‌بندی کانتکس رسم برای جبران dpr و همچنین نگاشت ابعاد منطقی به واقعی
-    // این مقیاس، عامل اصلی است که تمامی Draw ها را تحت تاثیر قرار می دهد.
-    scaleFactor = canvas.width / LOGICAL_CANVAS_WIDTH;
+    // مقیاس‌بندی کانتکس رسم
+    // هر بار که calculateScaleFactor فراخوانی می‌شود، context را reset می‌کنیم
+    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
     ctx.scale(dpr, dpr); // مقیاس‌بندی برای رندر HiDPI
+
+    // محاسبه scaleFactor برای نگاشت از ابعاد منطقی به ابعاد CSS
+    // این مقیاس، عامل اصلی است که تمامی Draw ها را تحت تاثیر قرار می دهد.
+    scaleFactor = desiredCssWidth / LOGICAL_CANVAS_WIDTH;
     ctx.scale(scaleFactor, scaleFactor); // مقیاس‌بندی از ابعاد منطقی به ابعاد CSS
 
 
@@ -328,7 +333,8 @@ function calculateScaleFactor() {
     console.log(`Desired CSS Canvas: ${desiredCssWidth.toFixed(2)}x${desiredCssHeight.toFixed(2)}`);
     console.log(`Actual Canvas Resolution (DPR): ${canvas.width}x${canvas.height}`);
     console.log(`Device Pixel Ratio (DPR): ${dpr}`);
-    console.log(`Scale Factor (Logical to Physical Draw): ${scaleFactor.toFixed(2)}`);
+    console.log(`Calculated Scale Factor: ${scaleFactor.toFixed(2)}`);
+    console.log(`Logical Ground Y: ${LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET}`);
 }
 
 
@@ -350,7 +356,7 @@ function initGame() {
     // ایجاد تایل‌های زمین - با ابعاد منطقی
     groundTiles = [];
     groundTiles.push(new Ground(0));
-    groundTiles.push(new Ground(LOGICAL_CANVAS_WIDTH * 2)); // تایل دوم بلافاصله بعد از اولی شروع میشه
+    groundTiles.push(new Ground(LOGICAL_CANVAS_WIDTH * 2)); 
 
     if (frameId) {
         cancelAnimationFrame(frameId);
@@ -364,15 +370,17 @@ function generateObstacle() {
     const timeSinceLastObstacle = currentTime - lastObstacleTime;
 
     let requiredGap = Math.random() * (LOGICAL_CANVAS_WIDTH * BASE_OBSTACLE_MAX_GAP_RATIO - LOGICAL_CANVAS_WIDTH * BASE_OBSTACLE_MIN_GAP_RATIO) + LOGICAL_CANVAS_WIDTH * BASE_OBSTACLE_MIN_GAP_RATIO;
-    requiredGap = requiredGap / (gameSpeed / BASE_GAME_SPEED); // کاهش فاصله با افزایش سرعت
+    requiredGap = requiredGap / (gameSpeed / BASE_GAME_SPEED);
 
     if (!lastObstacle || (LOGICAL_CANVAS_WIDTH - lastObstacle.x > requiredGap && timeSinceLastObstacle > 1000 / (gameSpeed * 0.8))) {
         let availableObstacleTypes = BASE_OBSTACLE_TYPES.filter(type => {
-            // اطمینان از اینکه موانع خیلی بلند از ارتفاع بوم منطقی بیرون نزنند
-            return type.height <= LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET + 10;
+            return type.height <= LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET + 5; // کمی فاصله از زمین منطقی
         });
 
-        if (availableObstacleTypes.length === 0) return; // اگر مانع مناسبی نبود، تولید نکن
+        if (availableObstacleTypes.length === 0) {
+            console.warn("No suitable obstacle type found for current logical height. Skipping obstacle generation.");
+            return;
+        }
 
         const randomIndex = Math.floor(Math.random() * availableObstacleTypes.length);
         obstacles.push(new Obstacle(availableObstacleTypes[randomIndex].type));
@@ -399,9 +407,8 @@ function updateGame() {
     score++;
     currentScoreDisplay.textContent = Math.floor(score / 10);
     
-    // افزایش سرعت بازی: هر 1000 امتیاز (واقعی)، سرعت 0.5 واحد افزایش پیدا می‌کنه
     gameSpeed = BASE_GAME_SPEED + Math.floor(score / 1000) * 0.5;
-    gameSpeed = Math.min(gameSpeed, BASE_GAME_SPEED + 10); // محدود کردن حداکثر سرعت
+    gameSpeed = Math.min(gameSpeed, BASE_GAME_SPEED + 10); 
 
     player.update();
 
@@ -435,8 +442,8 @@ function updateGame() {
 }
 
 function drawGame() {
-    // پاک کردن بوم با ابعاد واقعی Canvas
-    ctx.clearRect(0, 0, canvas.width / scaleFactor, canvas.height / scaleFactor); 
+    // پاک کردن بوم با ابعاد واقعی Canvas (قبل از scale)
+    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1)); 
 
     clouds.forEach(cloud => cloud.draw());
     groundTiles.forEach(tile => tile.draw());
@@ -470,10 +477,8 @@ function endGame() {
 
 // === مدیریت رویدادها ===
 
-// گوش دادن به تغییرات اندازه صفحه برای واکنش‌گرایی
 window.addEventListener('resize', initGame);
 
-// مدیریت ورودی (کیبورد و لمس)
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
         if (!gameOver) {
