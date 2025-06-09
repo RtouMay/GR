@@ -10,61 +10,62 @@ const restartButton = document.getElementById('restartButton');
 let player;
 let obstacles = [];
 let clouds = [];
-let groundTiles = [];
+let groundTiles = []; // فقط برای افکت زمین
 let score = 0;
 let highScore = parseInt(localStorage.getItem('dinoHighScore') || '0', 10);
-let gameSpeed = 4;
+let gameSpeed = 0; // سرعت در initGame مقداردهی می‌شود
 let gameOver = false;
 let frameId;
 let lastObstacleTime = 0;
 let lastCloudTime = 0;
 
-// === ابعاد پایه برای طراحی بازی (ابعاد منطقی) ===
-// این ابعاد، ابعادی هستند که بازی بر اساس آنها "طراحی" شده است.
-// این ابعاد را برای Mobile-First به 400x120 تغییر می‌دهیم.
-const LOGICAL_CANVAS_WIDTH = 400;
-const LOGICAL_CANVAS_HEIGHT = 120;
-const LOGICAL_GROUND_Y_OFFSET = 15; // فاصله زمین از پایین در ابعاد منطقی
+// === ابعاد پایه منطقی برای طراحی بازی (Portrait Mobile-First) ===
+// بازی برای این ابعاد طراحی شده است.
+// همه اشیاء، سرعت‌ها و موقعیت‌ها نسبت به این ابعاد منطقی هستند.
+const LOGICAL_CANVAS_WIDTH = 320; 
+const LOGICAL_CANVAS_HEIGHT = 480; // ارتفاع پایه بزرگتر برای Portrait
+const LOGICAL_GROUND_Y_OFFSET = 50; // فاصله زمین از پایین (پایین‌تر از قبل)
 
-let currentLogicalCanvasWidth = LOGICAL_CANVAS_WIDTH; 
-let currentLogicalCanvasHeight = LOGICAL_CANVAS_HEIGHT; 
+// === ابعاد و متغیرهای واقعی Canvas (بر اساس مقیاس‌بندی) ===
+let currentCanvasWidth = LOGICAL_CANVAS_WIDTH;
+let currentCanvasHeight = LOGICAL_CANVAS_HEIGHT;
 let scaleFactor = 1; // ضریب مقیاس‌بندی از ابعاد منطقی به ابعاد واقعی Canvas
 
 // === تنظیمات عمومی (بر اساس ابعاد منطقی) ===
-const BASE_JUMP_VELOCITY = -5.5; // سرعت پرش کمتر برای ابعاد کوچکتر
-const BASE_GRAVITY = 0.3; // جاذبه کمتر برای ابعاد کوچکتر
-const BASE_GAME_SPEED = 3; // سرعت پایه بازی کمتر برای ابعاد کوچکتر
+const BASE_JUMP_VELOCITY = -15; // سرعت پرش بیشتر برای ارتفاع بلندتر
+const BASE_GRAVITY = 0.8; // جاذبه بیشتر
+const BASE_GAME_SPEED = 5; // سرعت پایه بازی
 
-// === تنظیمات شخصیت (روباه - بر اساس ابعاد منطقی) ===
-const BASE_FOX_WIDTH = 25; // عرض روباه کوچک‌تر
-const BASE_FOX_HEIGHT = 30; // ارتفاع روباه کوچک‌تر
-const FOX_START_X_RATIO = 0.08; 
+// === تنظیمات شخصیت روباه (بر اساس ابعاد منطقی) ===
+const BASE_FOX_WIDTH = 30; 
+const BASE_FOX_HEIGHT = 35;
+const FOX_START_X_RATIO = 0.15; // کمی به سمت چپ برای شروع
 
 // === تنظیمات موانع (بر اساس ابعاد منطقی) ===
-const BASE_OBSTACLE_MIN_GAP_RATIO = 0.4; // فاصله موانع کمی بیشتر
-const BASE_OBSTACLE_MAX_GAP_RATIO = 0.7;
+const BASE_OBSTACLE_MIN_GAP_LOGICAL = 150; // حداقل فاصله بین موانع (پیکسل منطقی)
+const BASE_OBSTACLE_MAX_GAP_LOGICAL = 300; // حداکثر فاصله بین موانع (پیکسل منطقی)
 const OBSTACLE_COLOR = '#ff1744';
 
 const BASE_OBSTACLE_TYPES = [
-    { type: 'block_low', width: 15, height: 25 }, // ابعاد موانع کوچک‌تر
-    { type: 'block_high', width: 15, height: 40 },
-    { type: 'flying_low', width: 25, height: 15, yOffset: 20 }, // پرنده پایین
-    { type: 'flying_mid', width: 25, height: 15, yOffset: 35 }, // پرنده میانی
-    { type: 'stacked_2', width: 15, height: 50, segments: 2 }, // دو بلوک روی هم
-    { type: 'stacked_3', width: 15, height: 65, segments: 3 } // سه بلوک روی هم
+    { type: 'block_low', width: 20, height: 40 }, // ابعاد موانع
+    { type: 'block_medium', width: 20, height: 60 },
+    { type: 'block_high', width: 20, height: 80 },
+    { type: 'flying_low', width: 40, height: 20, yOffset: 120 }, // پرنده در ارتفاع پایین‌تر
+    { type: 'flying_mid', width: 40, height: 20, yOffset: 200 }, // پرنده در ارتفاع میانی
+    { type: 'stacked_2', width: 20, height: 70, segments: 2 },
+    { type: 'stacked_3', width: 20, height: 100, segments: 3 }
 ];
 
 // === تنظیمات ابرها (بر اساس ابعاد منطقی) ===
-const BASE_CLOUD_WIDTH = 40;
+const BASE_CLOUD_WIDTH = 50;
 const BASE_CLOUD_HEIGHT = 15;
 const CLOUD_COLOR = '#b0bec5';
-const BASE_CLOUD_MIN_GAP_RATIO = 0.3;
-const BASE_CLOUD_MAX_GAP_RATIO = 0.8;
+const BASE_CLOUD_MIN_GAP_LOGICAL = 100; 
+const BASE_CLOUD_MAX_GAP_LOGICAL = 400;
 
 // === تنظیمات زمین (بر اساس ابعاد منطقی) ===
 const GROUND_COLOR = '#555';
 const GROUND_LINE_COLOR = '#666';
-
 
 // === صداها (اگر فایل mp3 ها در پوشه assets باشند) ===
 const jumpSound = new Audio('assets/jump.mp3');
@@ -83,7 +84,7 @@ function drawCloudShape(x, y, width, height) {
 }
 
 function drawFox(x, y, width, height) {
-    const FOX_COLOR = '#ff9800';
+    const FOX_COLOR = '#ff9800'; // نارنجی برای روباه
 
     ctx.fillStyle = FOX_COLOR;
 
@@ -103,7 +104,7 @@ function drawFox(x, y, width, height) {
     ctx.arc(x + width * 0.5, y + height * 0.2, width * 0.4, 0, Math.PI * 2);
     ctx.fill();
 
-    // گوش‌ها
+    // گوش‌ها (ابعاد کوچک)
     ctx.beginPath();
     ctx.moveTo(x + width * 0.2, y + height * 0.05);
     ctx.lineTo(x + width * 0.1, y - 5); 
@@ -118,19 +119,19 @@ function drawFox(x, y, width, height) {
     ctx.closePath();
     ctx.fill();
 
-    // چشم‌ها
+    // چشم‌ها (ابعاد کوچک)
     ctx.fillStyle = 'black';
     ctx.beginPath();
     ctx.arc(x + width * 0.4, y + height * 0.15, 2, 0, Math.PI * 2); 
     ctx.arc(x + width * 0.6, y + height * 0.15, 2, 0, Math.PI * 2); 
     ctx.fill();
 
-    // بینی
+    // بینی (ابعاد کوچک)
     ctx.beginPath();
     ctx.arc(x + width * 0.5, y + height * 0.25, 2, 0, Math.PI * 2); 
     ctx.fill();
 
-    // دم
+    // دم (ابعاد کوچک)
     ctx.fillStyle = FOX_COLOR;
     ctx.beginPath();
     ctx.moveTo(x, y + height * 0.7);
@@ -278,33 +279,37 @@ function calculateScaleFactor() {
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
-    // حداکثر ابعاد CSS که canvas می‌تواند اشغال کند
-    // این مقادیر از CSS max-width/height هم تبعیت می‌کنند
-    let maxCssWidth = screenWidth * 0.98; 
-    let maxCssHeight = screenHeight * 0.90; 
-
-    // اگر ارتفاع viewport خیلی کم باشد (مثل حالت افقی موبایل با کیبورد باز)
-    // ارتفاع maxCssHeight را بیشتر کاهش می‌دهیم
-    if (screenHeight < 300) { // اگر ارتفاع صفحه خیلی کم بود
-        maxCssHeight = screenHeight * 0.80; 
-    }
-
     let desiredCssWidth;
     let desiredCssHeight;
 
     const logicalAspectRatio = LOGICAL_CANVAS_WIDTH / LOGICAL_CANVAS_HEIGHT;
 
-    // رویکرد Mobile-First: ابتدا بر اساس عرض صفحه محاسبه می‌کنیم
-    desiredCssWidth = maxCssWidth;
+    // رویکرد موبایل-فرست: بر اساس عرض صفحه محاسبه می‌کنیم
+    // در حالت Portrait، عرض صفحه محدودتر است.
+    desiredCssWidth = screenWidth * 0.98; // 98% از عرض صفحه برای Portrait
+
+    // محاسبه ارتفاع بر اساس عرض و حفظ نسبت ابعاد منطقی
     desiredCssHeight = desiredCssWidth / logicalAspectRatio;
 
-    // اگر ارتفاع محاسبه شده از حداکثر ارتفاع مجاز بیشتر بود، بر اساس ارتفاع محدود می‌کنیم
-    if (desiredCssHeight > maxCssHeight) {
-        desiredCssHeight = maxCssHeight;
+    // اگر ارتفاع محاسبه شده (بعد از لحاظ کردن عرض) از ارتفاع موجود صفحه بیشتر بود،
+    // ارتفاع را محدود می‌کنیم و عرض را دوباره بر اساس آن تنظیم می‌کنیم.
+    // این برای اطمینان از جا شدن در صفحه موبایل (به خصوص در حالت عمودی) است.
+    const maxAvailableHeight = screenHeight * 0.85; // 85% از ارتفاع صفحه برای Canvas (فضای UI بالا و پایین)
+    if (desiredCssHeight > maxAvailableHeight) {
+        desiredCssHeight = maxAvailableHeight;
         desiredCssWidth = desiredCssHeight * logicalAspectRatio;
     }
 
-    // اطمینان از حداقل ابعاد برای صفحه‌های خیلی کوچک (مثلاً 250x75)
+    // اگر در حالت افقی (Landscape) بودیم یا دسکتاپ، عرض را محدود می‌کنیم.
+    // این از بزرگ شدن بیش از حد Canvas روی صفحه‌های عریض جلوگیری می‌کند.
+    const maxDesktopWidth = 600; // حداکثر عرض در دسکتاپ
+    if (desiredCssWidth > maxDesktopWidth) {
+        desiredCssWidth = maxDesktopWidth;
+        desiredCssHeight = desiredCssWidth / logicalAspectRatio;
+    }
+
+
+    // اطمینان از حداقل ابعاد (برای صفحه‌های خیلی کوچک)
     if (desiredCssWidth < 250) desiredCssWidth = 250;
     if (desiredCssHeight < 75) desiredCssHeight = 75;
 
@@ -314,17 +319,14 @@ function calculateScaleFactor() {
     canvas.style.height = `${desiredCssHeight}px`;
 
     // تنظیم ابعاد واقعی Canvas برای رندر HiDPI
-    // این ابعاد، فضایی را تعریف می‌کند که `ctx` در آن رسم می‌کند
     canvas.width = Math.floor(desiredCssWidth * dpr);
     canvas.height = Math.floor(desiredCssHeight * dpr);
 
     // مقیاس‌بندی کانتکس رسم
-    // هر بار که calculateScaleFactor فراخوانی می‌شود، context را reset می‌کنیم
     ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
     ctx.scale(dpr, dpr); // مقیاس‌بندی برای رندر HiDPI
 
     // محاسبه scaleFactor برای نگاشت از ابعاد منطقی به ابعاد CSS
-    // این مقیاس، عامل اصلی است که تمامی Draw ها را تحت تاثیر قرار می دهد.
     scaleFactor = desiredCssWidth / LOGICAL_CANVAS_WIDTH;
     ctx.scale(scaleFactor, scaleFactor); // مقیاس‌بندی از ابعاد منطقی به ابعاد CSS
 
@@ -346,7 +348,6 @@ function initGame() {
     obstacles = [];
     clouds = [];
     score = 0;
-    // سرعت بازی، بر اساس سرعت پایه منطقی است
     gameSpeed = BASE_GAME_SPEED;
     gameOver = false;
     currentScoreDisplay.textContent = score;
@@ -369,12 +370,12 @@ function generateObstacle() {
     const lastObstacle = obstacles[obstacles.length - 1];
     const timeSinceLastObstacle = currentTime - lastObstacleTime;
 
-    let requiredGap = Math.random() * (LOGICAL_CANVAS_WIDTH * BASE_OBSTACLE_MAX_GAP_RATIO - LOGICAL_CANVAS_WIDTH * BASE_OBSTACLE_MIN_GAP_RATIO) + LOGICAL_CANVAS_WIDTH * BASE_OBSTACLE_MIN_GAP_RATIO;
+    let requiredGap = Math.random() * (LOGICAL_CANVAS_WIDTH * BASE_OBSTACLE_MAX_GAP_LOGICAL - LOGICAL_CANVAS_WIDTH * BASE_OBSTACLE_MIN_GAP_LOGICAL) + LOGICAL_CANVAS_WIDTH * BASE_OBSTACLE_MIN_GAP_LOGICAL;
     requiredGap = requiredGap / (gameSpeed / BASE_GAME_SPEED);
 
     if (!lastObstacle || (LOGICAL_CANVAS_WIDTH - lastObstacle.x > requiredGap && timeSinceLastObstacle > 1000 / (gameSpeed * 0.8))) {
         let availableObstacleTypes = BASE_OBSTACLE_TYPES.filter(type => {
-            return type.height <= LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET + 5; // کمی فاصله از زمین منطقی
+            return type.height <= LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET + 5; 
         });
 
         if (availableObstacleTypes.length === 0) {
@@ -393,7 +394,7 @@ function generateCloud() {
     const lastCloud = clouds[clouds.length - 1];
     const timeSinceLastCloud = currentTime - lastCloudTime;
 
-    const requiredGap = Math.random() * (LOGICAL_CANVAS_WIDTH * BASE_CLOUD_MAX_GAP_RATIO - LOGICAL_CANVAS_WIDTH * BASE_CLOUD_MIN_GAP_RATIO) + LOGICAL_CANVAS_WIDTH * BASE_CLOUD_MIN_GAP_RATIO;
+    const requiredGap = Math.random() * (LOGICAL_CANVAS_WIDTH * BASE_CLOUD_MAX_GAP_LOGICAL - LOGICAL_CANVAS_WIDTH * BASE_CLOUD_MIN_GAP_LOGICAL) + LOGICAL_CANVAS_WIDTH * BASE_CLOUD_MIN_GAP_LOGICAL;
 
     if (!lastCloud || (LOGICAL_CANVAS_WIDTH - lastCloud.x > requiredGap && timeSinceLastCloud > 5000 / (gameSpeed / BASE_GAME_SPEED))) {
         clouds.push(new Cloud());
@@ -442,8 +443,8 @@ function updateGame() {
 }
 
 function drawGame() {
-    // پاک کردن بوم با ابعاد واقعی Canvas (قبل از scale)
-    ctx.clearRect(0, 0, canvas.width / (window.devicePixelRatio || 1), canvas.height / (window.devicePixelRatio || 1)); 
+    // پاک کردن بوم با ابعاد منطقی، چون ctx.scale قبلاً اعمال شده
+    ctx.clearRect(0, 0, LOGICAL_CANVAS_WIDTH, LOGICAL_CANVAS_HEIGHT); 
 
     clouds.forEach(cloud => cloud.draw());
     groundTiles.forEach(tile => tile.draw());
