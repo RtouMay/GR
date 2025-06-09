@@ -17,9 +17,9 @@
             flex-direction: column;
             color: #e0e0e0; /* رنگ متن روشن برای تم دارک */
             user-select: none;
-            -webkit-user-select: none; /* برای مرورگرهای WebKit */
-            -moz-user-select: none; /* برای فایرفاکس */
-            -ms-user-select: none; /* برای IE/Edge */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
             touch-action: manipulation; /* برای جلوگیری از زوم و اسکرول ناخواسته در موبایل */
         }
         canvas {
@@ -29,12 +29,13 @@
             touch-action: none; /* جلوگیری از اسکرول و زوم در موبایل */
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* سایه برای عمق */
             border-radius: 8px; /* گوشه‌های گرد */
-            max-width: 98vw; /* کمی بیشتر جا بده */
-            max-height: 90vh; /* کمی بیشتر جا بده */
+            /* ابعاد canvas از طریق JS تنظیم می‌شود، اما این max-width/height یک محافظ است */
+            max-width: 98vw;
+            max-height: 90vh;
         }
         #gameTitle {
             position: absolute;
-            top: 15px; /* کمی بالاتر */
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
             font-size: clamp(1.8em, 6vw, 3em); /* فونت واکنش‌گرا و کمی بزرگ‌تر */
@@ -53,12 +54,12 @@
             display: flex;
             gap: clamp(15px, 4vw, 40px); /* فاصله واکنش‌گرا */
             background-color: #444;
-            padding: 12px 25px; /* پدینگ بیشتر */
-            border-radius: 15px; /* گوشه‌های گردتر */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* سایه جذاب‌تر */
+            padding: 12px 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
             z-index: 10;
-            border: 1px solid #666; /* حاشیه ظریف */
-            transition: all 0.3s ease; /* انیمیشن نرم */
+            border: 1px solid #666;
+            transition: all 0.3s ease;
         }
         #scoreContainer:hover {
             transform: translateY(-2px);
@@ -66,18 +67,18 @@
         }
         .score-item {
             display: flex;
-            flex-direction: column; /* لیبل و عدد زیر هم */
+            flex-direction: column;
             align-items: center;
         }
         .score-label {
-            font-size: 0.7em; /* لیبل کوچک‌تر */
-            margin-bottom: 5px; /* فاصله از عدد */
+            font-size: 0.7em;
+            margin-bottom: 5px;
             color: #bdbdbd;
         }
         .score-value {
-            font-size: 1.2em; /* عدد بزرگ‌تر */
+            font-size: 1.2em;
             color: #fff;
-            text-shadow: 0 0 5px rgba(253, 216, 53, 0.5); /* درخشش خفیف */
+            text-shadow: 0 0 5px rgba(253, 216, 53, 0.5);
         }
         #gameOverScreen {
             position: absolute;
@@ -85,15 +86,15 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.9); /* دارک‌تر و مات‌تر */
+            background-color: rgba(0, 0, 0, 0.9);
             display: none;
             justify-content: center;
             align-items: center;
             flex-direction: column;
             text-align: center;
-            font-size: clamp(1.8em, 7vw, 2.5em); /* فونت واکنش‌گرا و بزرگ‌تر */
+            font-size: clamp(1.8em, 7vw, 2.5em);
             color: white;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.7); /* درخشش بیشتر متن */
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
             z-index: 20;
         }
         #gameOverScreen p {
@@ -101,25 +102,25 @@
             line-height: 1.4;
         }
         .promo-message {
-            font-size: clamp(1em, 4vw, 1.5em); /* فونت واکنش‌گرا */
+            font-size: clamp(1em, 4vw, 1.5em);
             color: #a7ffeb;
             font-weight: bold;
-            margin-top: 20px; /* فاصله بیشتر */
-            animation: pulse 1.5s infinite alternate; /* انیمیشن تپش */
+            margin-top: 20px;
+            animation: pulse 1.5s infinite alternate;
         }
         @keyframes pulse {
             0% { transform: scale(1); opacity: 1; }
             100% { transform: scale(1.05); opacity: 0.9; }
         }
         #gameOverScreen button {
-            padding: 18px 35px; /* بزرگ‌تر */
-            font-size: clamp(0.8em, 3.5vw, 1em); /* فونت واکنش‌گرا و بزرگ‌تر */
-            margin-top: 40px; /* فاصله بیشتر */
+            padding: 18px 35px;
+            font-size: clamp(0.8em, 3.5vw, 1em);
+            margin-top: 40px;
             cursor: pointer;
             background-color: #00bcd4;
             color: white;
             border: none;
-            border-radius: 12px; /* گردتر */
+            border-radius: 12px;
             transition: all 0.3s ease;
             box-shadow: 0 8px 16px rgba(0, 188, 212, 0.4);
             letter-spacing: 1px;
@@ -127,7 +128,7 @@
         }
         #gameOverScreen button:hover {
             background-color: #0097a7;
-            transform: translateY(-5px); /* حرکت بیشتر */
+            transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0, 188, 212, 0.6);
         }
     </style>
