@@ -28,7 +28,7 @@ const BASE_CANVAS_HEIGHT = 200;
 
 let currentCanvasWidth = BASE_CANVAS_WIDTH;
 let currentCanvasHeight = BASE_CANVAS_HEIGHT;
-let scaleFactor = 1; // ضریب مقیاس‌بندی
+let scaleFactor = 1; // ضریب مقیاس‌بندی اولیه
 let GROUND_Y = BASE_CANVAS_HEIGHT - 20; // ارتفاع زمین در ابعاد پایه
 
 // === تنظیمات عمومی ===
@@ -250,7 +250,9 @@ class Ground {
     constructor(x) {
         this.x = x;
         this.y = GROUND_Y;
-        this.width = currentCanvasWidth * 2;
+        // عرض زمین رو بیشتر می‌کنیم تا همیشه پوشش بده
+        // باید حواسمون باشه که حداقل دو تایل زمین داشته باشیم
+        this.width = BASE_CANVAS_WIDTH * 2 * scaleFactor; 
         this.height = currentCanvasHeight - GROUND_Y;
     }
 
@@ -265,8 +267,10 @@ class Ground {
 
     update() {
         this.x -= gameSpeed;
+        // اگر تایل از صفحه خارج شد، آن را به پشت آخرین تایل برگردان
+        // اینجا باید با طول فعلی تایل کار کنیم نه طول پایه
         if (this.x + this.width < 0) {
-            this.x = this.x + this.width * 2;
+            this.x = groundTiles[groundTiles.length - 1].x + groundTiles[groundTiles.length - 1].width;
         }
     }
 }
@@ -275,42 +279,40 @@ class Ground {
 
 // تابع برای تنظیم ابعاد Canvas بر اساس ابعاد صفحه نمایش و حالت عمودی/افقی
 function resizeCanvas() {
+    console.log("Resizing canvas...");
     const dpr = window.devicePixelRatio || 1; // Device Pixel Ratio برای نمایشگرهای HiDPI
 
     // ابعاد پیشنهادی برای Web App تلگرام (تقریباً تمام عرض)
-    // برای حالت عمودی: عرض، 95% عرض Viewport. ارتفاع، نسبت به عرض.
-    // برای حالت افقی: عرض، حداکثر 800px. ارتفاع، نسبت به عرض.
     let targetWidth;
     let targetHeight;
-
-    const maxCanvasWidth = 800; // حداکثر عرض مجاز برای دسکتاپ/افقی
-    const maxCanvasHeight = 200; // حداکثر ارتفاع مجاز برای دسکتاپ/افقی
 
     const screenWidth = window.innerWidth;
     const screenHeight = window.innerHeight;
 
-    // تشخیص حالت عمودی یا افقی
+    // تشخیص حالت عمودی یا افقی و تنظیم ابعاد
     if (screenWidth < screenHeight) { // حالت عمودی گوشی
-        targetWidth = screenWidth * 0.95; // 95% عرض صفحه
-        targetHeight = targetWidth / (BASE_CANVAS_WIDTH / BASE_CANVAS_HEIGHT); // حفظ نسبت ابعاد
-        // اگر ارتفاع محاسبه شده خیلی زیاد بود، محدودش کن (مثلاً تا 70% ارتفاع صفحه)
-        if (targetHeight > screenHeight * 0.70) {
-            targetHeight = screenHeight * 0.70;
+        targetWidth = screenWidth * 0.98; // 98% عرض صفحه
+        targetHeight = targetWidth / (BASE_CANVAS_WIDTH / BASE_CANVAS_HEIGHT);
+
+        // اگر ارتفاع محاسبه شده هنوز هم خیلی زیاد بود، ارتفاع رو محدود می‌کنیم
+        if (targetHeight > screenHeight * 0.6) { // حداکثر 60% ارتفاع صفحه برای بازی
+            targetHeight = screenHeight * 0.6;
             targetWidth = targetHeight * (BASE_CANVAS_WIDTH / BASE_CANVAS_HEIGHT);
         }
     } else { // حالت افقی گوشی یا دسکتاپ
-        targetWidth = Math.min(maxCanvasWidth, screenWidth * 0.95);
+        targetWidth = Math.min(BASE_CANVAS_WIDTH, screenWidth * 0.98); // حداکثر 800px یا 98% عرض صفحه
         targetHeight = targetWidth / (BASE_CANVAS_WIDTH / BASE_CANVAS_HEIGHT);
-        // اگر ارتفاع محاسبه شده خیلی زیاد بود، محدودش کن (مثلاً تا 80% ارتفاع صفحه)
-        if (targetHeight > screenHeight * 0.80) {
-             targetHeight = screenHeight * 0.80;
+
+        // اگر ارتفاع محاسبه شده خیلی زیاد بود، محدودش کن (مثلاً تا 85% ارتفاع صفحه)
+        if (targetHeight > screenHeight * 0.85) {
+             targetHeight = screenHeight * 0.85;
              targetWidth = targetHeight * (BASE_CANVAS_WIDTH / BASE_CANVAS_HEIGHT);
         }
     }
 
     // اطمینان از اینکه ابعاد حداقل مقدار منطقی را داشته باشند
-    if (targetWidth < 300) targetWidth = 300; // حداقل عرض قابل بازی
-    if (targetHeight < 75) targetHeight = 75; // حداقل ارتفاع قابل بازی
+    if (targetWidth < 250) targetWidth = 250; // حداقل عرض قابل بازی
+    if (targetHeight < 60) targetHeight = 60; // حداقل ارتفاع قابل بازی
 
     currentCanvasWidth = Math.floor(targetWidth);
     currentCanvasHeight = Math.floor(targetHeight);
@@ -328,29 +330,15 @@ function resizeCanvas() {
     scaleFactor = currentCanvasWidth / BASE_CANVAS_WIDTH;
 
     // تنظیم مجدد GROUND_Y بر اساس ارتفاع مقیاس‌بندی شده
-    // 20 پیکسل در BASE_CANVAS_HEIGHT، حالا با scaleFactor متناسب میشه
     GROUND_Y = currentCanvasHeight - (20 * scaleFactor);
 
-    // بازنشانی و مقیاس‌بندی مجدد عناصر بازی
-    if (player) {
-        player.width = BASE_FOX_WIDTH * scaleFactor;
-        player.height = BASE_FOX_HEIGHT * scaleFactor;
-        player.x = currentCanvasWidth * FOX_START_X_RATIO; // موقعیت X بازیکن همیشه یک نسبت از عرض بوم باشه
-        player.y = GROUND_Y - player.height;
-        player.velocityY = 0; // ریست سرعت عمودی
-    }
-    
-    // موانع، ابرها و زمین رو ریست می‌کنیم تا با ابعاد جدید تولید و رندر بشن
-    obstacles = [];
-    clouds = [];
-    groundTiles = [];
-    groundTiles.push(new Ground(0));
-    groundTiles.push(new Ground(groundTiles[0].width));
+    console.log(`Canvas resized to: ${currentCanvasWidth}x${currentCanvasHeight} (DPR: ${dpr}, Scale Factor: ${scaleFactor.toFixed(2)})`);
+    console.log(`Ground Y: ${GROUND_Y}`);
 }
 
 
 function initGame() {
-    resizeCanvas(); // تنظیم ابعاد در شروع و در صورت تغییر اندازه صفحه
+    resizeCanvas(); // تنظیم ابعاد در شروع
 
     player = new Player();
     obstacles = [];
@@ -362,6 +350,11 @@ function initGame() {
     currentScoreDisplay.textContent = score;
     highScoreDisplay.textContent = highScore;
     gameOverScreen.style.display = 'none';
+
+    // ایجاد تایل‌های زمین - با ابعاد مقیاس‌بندی شده جدید
+    groundTiles = []; // ابتدا خالی می‌کنیم
+    groundTiles.push(new Ground(0));
+    groundTiles.push(new Ground(groundTiles[0].width)); // تایل دوم بلافاصله بعد از اولی شروع میشه
 
     if (frameId) {
         cancelAnimationFrame(frameId);
@@ -448,6 +441,7 @@ function updateGame() {
 }
 
 function drawGame() {
+    // console.log("Drawing..."); // برای دیباگ
     ctx.clearRect(0, 0, currentCanvasWidth, currentCanvasHeight); // پاک کردن بوم
 
     clouds.forEach(cloud => cloud.draw());
