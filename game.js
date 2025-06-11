@@ -1,7 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const currentScoreDisplay = document.getElementById('currentScore');
-const highScoreDisplay = document('highScore');
+const highScoreDisplay = document.getElementById('highScore');
 const gameOverScreen = document.getElementById('gameOverScreen');
 const finalScoreDisplay = document.getElementById('finalScore');
 const discountInfoDisplay = document.getElementById('discountInfo');
@@ -42,15 +42,16 @@ const BASE_GAME_SPEED = 5;
 const BASE_FOX_WIDTH = 30;
 const BASE_FOX_HEIGHT = 35;
 const FOX_START_X_RATIO = 0.15;
-const FOX_BODY_COLOR = '#ff9800'; // Fox body color
-const EYE_COLOR = 'black'; // Eye color
-const GLASSES_COLOR = 'black'; // Glasses color
-const CLOTHES_COLOR = '#F44336'; // Clothes color (e.g., a red vest)
+const FOX_BODY_COLOR = '#FFCC80'; // نارنجی روشن، آرامش‌بخش
+const EYE_COLOR = '#424242'; // خاکستری تیره برای چشم
+const GLASSES_COLOR = '#212121'; // مشکی تیره برای عینک
+const CLOTHES_COLOR = '#EF5350'; // قرمز ملایم برای لباس
 
 // === Obstacle Settings (Logical Dimensions) ===
 const BASE_OBSTACLE_MIN_GAP_LOGICAL = 150;
 const BASE_OBSTACLE_MAX_GAP_LOGICAL = 300;
-const OBSTACLE_COLOR = '#E91E63'; // Soft neon red
+const OBSTACLE_COLOR = '#4DD0E1'; // آبی فیروزه‌ای آرامش‌بخش
+const OBSTACLE_STROKE_COLOR = '#00ACC1'; // آبی تیره‌تر برای خطوط موانع
 
 const BASE_OBSTACLE_TYPES = [
     { type: 'block_low', width: 20, height: 40 },
@@ -65,13 +66,13 @@ const BASE_OBSTACLE_TYPES = [
 // === Cloud Settings (Logical Dimensions) ===
 const BASE_CLOUD_WIDTH = 50;
 const BASE_CLOUD_HEIGHT = 15;
-const CLOUD_COLOR = '#90CAF9'; // Soft neon blue
+const CLOUD_COLOR = '#B0BEC5'; // خاکستری آبی روشن
 const BASE_CLOUD_MIN_GAP_LOGICAL = 100;
 const BASE_CLOUD_MAX_GAP_LOGICAL = 400;
 
 // === Ground Settings (Logical Dimensions) ===
-const GROUND_COLOR = '#424242'; // Darker gray ground
-const GROUND_LINE_COLOR = '#616161'; // Darker gray ground lines
+const GROUND_COLOR = '#90A4AE'; // خاکستری آبی متوسط
+const GROUND_LINE_COLOR = '#78909C'; // خاکستری آبی تیره تر
 
 // === Discount System ===
 const DISCOUNT_PER_500_SCORE = 0.5; // 0.5% discount for every 500 score
@@ -100,6 +101,7 @@ function drawCloudShape(x, y, width, height) {
     ctx.closePath();
 }
 
+// Function to draw the fox with glasses and clothes
 function drawFox(x, y, width, height, runFrame) {
     // Body 
     ctx.fillStyle = FOX_BODY_COLOR;
@@ -133,15 +135,11 @@ function drawFox(x, y, width, height, runFrame) {
     ctx.closePath();
     ctx.fill();
 
-    // Glasses
+    // Glasses (black, sleek)
     ctx.fillStyle = GLASSES_COLOR;
-    // Left lens frame
     ctx.fillRect(x + width * 0.28, y + height * 0.12, width * 0.18, height * 0.08); 
-    // Right lens frame
     ctx.fillRect(x + width * 0.54, y + height * 0.12, width * 0.18, height * 0.08);
-    // Bridge of nose
     ctx.fillRect(x + width * 0.46, y + height * 0.15, width * 0.08, 2);
-    // Arms of glasses
     ctx.fillRect(x + width * 0.28, y + height * 0.15, -width * 0.05, 2);
     ctx.fillRect(x + width * 0.72, y + height * 0.15, width * 0.05, 2);
 
@@ -167,7 +165,7 @@ function drawFox(x, y, width, height, runFrame) {
     ctx.fill();
 
     // Clothes (a simple modern vest shape)
-    ctx.fillStyle = CLOTHES_COLOR;
+    ctx.fillStyle = CLOTHES_COLOR; // Red color for clothes
     ctx.beginPath();
     ctx.moveTo(x + width * 0.2, y + height * 0.5); 
     ctx.lineTo(x + width * 0.8, y + height * 0.5); 
@@ -264,7 +262,7 @@ class Obstacle {
         ctx.fillStyle = OBSTACLE_COLOR; 
         if (this.type.includes('block')) {
             ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.strokeStyle = '#AD1457'; 
+            ctx.strokeStyle = OBSTACLE_STROKE_COLOR; 
             ctx.lineWidth = 2; 
             for (let i = 0; i < this.segments; i++) {
                 ctx.strokeRect(this.x, this.y + (this.height / this.segments) * i, this.width, this.height / this.segments);
@@ -281,7 +279,7 @@ class Obstacle {
             const segmentHeight = this.height / this.segments;
             for (let i = 0; i < this.segments; i++) {
                 ctx.fillRect(this.x, this.y + (segmentHeight * i), this.width, segmentHeight);
-                ctx.strokeStyle = '#AD1457';
+                ctx.strokeStyle = OBSTACLE_STROKE_COLOR;
                 ctx.lineWidth = 2;
                 ctx.strokeRect(this.x, this.y + (segmentHeight * i), this.width, segmentHeight);
             }
@@ -460,9 +458,8 @@ function initGame() {
 }
 
 function generateObstacle() {
-    // Only generate obstacles if score is above the threshold
     if (Math.floor(score / 10) < OBSTACLE_START_SCORE_THRESHOLD) {
-        return; // Don't generate obstacles yet
+        return; 
     }
 
     const currentTime = Date.now();
@@ -564,7 +561,7 @@ function endGame() {
     setDailyLimit(); 
 
     const finalScore = Math.floor(score / 10);
-    finalScoreDisplay.textContent = `امتیاز نهایی: ${finalScore}`;
+    finalScoreDisplay.textContent = finalScore; // Changed from innerHTML to textContent
 
     // Calculate discount
     let discountPercent = Math.floor(finalScore / 500) * DISCOUNT_PER_500_SCORE;
