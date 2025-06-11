@@ -45,12 +45,12 @@ const FOX_START_X_RATIO = 0.15;
 const FOX_BODY_COLOR = '#ff9800'; // Fox body color
 const EYE_COLOR = 'black'; // Eye color
 const GLASSES_COLOR = 'black'; // Glasses color
-const CLOTHES_COLOR = '#4CAF50'; // Clothes color (e.g., a green vest)
+const CLOTHES_COLOR = '#F44336'; // لباس قرمز (نئونی نیست چون چشم رو می زنه)
 
 // === Obstacle Settings (Logical Dimensions) ===
 const BASE_OBSTACLE_MIN_GAP_LOGICAL = 150;
 const BASE_OBSTACLE_MAX_GAP_LOGICAL = 300;
-const OBSTACLE_COLOR = '#ff1744';
+const OBSTACLE_COLOR = '#E91E63'; // قرمز نئونی ملایم
 
 const BASE_OBSTACLE_TYPES = [
     { type: 'block_low', width: 20, height: 40 },
@@ -65,13 +65,13 @@ const BASE_OBSTACLE_TYPES = [
 // === Cloud Settings (Logical Dimensions) ===
 const BASE_CLOUD_WIDTH = 50;
 const BASE_CLOUD_HEIGHT = 15;
-const CLOUD_COLOR = '#b0bec5';
+const CLOUD_COLOR = '#90CAF9'; // آبی روشن نئونی ملایم
 const BASE_CLOUD_MIN_GAP_LOGICAL = 100;
 const BASE_CLOUD_MAX_GAP_LOGICAL = 400;
 
 // === Ground Settings (Logical Dimensions) ===
-const GROUND_COLOR = '#555';
-const GROUND_LINE_COLOR = '#666';
+const GROUND_COLOR = '#424242'; // خاکستری تیره تر برای زمین
+const GROUND_LINE_COLOR = '#616161'; // خطوط زمین تیره تر
 
 // === Discount System ===
 const DISCOUNT_PER_500_SCORE = 0.5; // 0.5% discount for every 500 score
@@ -131,20 +131,23 @@ function drawFox(x, y, width, height, runFrame) {
     ctx.closePath();
     ctx.fill();
 
-    // Glasses
+    // Glasses (black, sleek)
     ctx.fillStyle = GLASSES_COLOR;
     // Left lens frame
-    ctx.fillRect(x + width * 0.3, y + height * 0.12, width * 0.15, height * 0.08); 
+    ctx.fillRect(x + width * 0.28, y + height * 0.12, width * 0.18, height * 0.08); 
     // Right lens frame
-    ctx.fillRect(x + width * 0.55, y + height * 0.12, width * 0.15, height * 0.08);
+    ctx.fillRect(x + width * 0.54, y + height * 0.12, width * 0.18, height * 0.08);
     // Bridge of nose
-    ctx.fillRect(x + width * 0.45, y + height * 0.15, width * 0.1, 2);
+    ctx.fillRect(x + width * 0.46, y + height * 0.15, width * 0.08, 2);
+    // Arms of glasses
+    ctx.fillRect(x + width * 0.28, y + height * 0.15, -width * 0.05, 2);
+    ctx.fillRect(x + width * 0.72, y + height * 0.15, width * 0.05, 2);
 
-    // Eyes (inside glasses)
+    // Eyes (inside glasses - subtle)
     ctx.fillStyle = EYE_COLOR;
     ctx.beginPath();
-    ctx.arc(x + width * 0.375, y + height * 0.16, 1.5, 0, Math.PI * 2); 
-    ctx.arc(x + width * 0.625, y + height * 0.16, 1.5, 0, Math.PI * 2); 
+    ctx.arc(x + width * 0.37, y + height * 0.16, 1.5, 0, Math.PI * 2); 
+    ctx.arc(x + width * 0.63, y + height * 0.16, 1.5, 0, Math.PI * 2); 
     ctx.fill();
 
     // Nose (previously defined)
@@ -161,18 +164,17 @@ function drawFox(x, y, width, height, runFrame) {
     ctx.closePath();
     ctx.fill();
 
-    // Clothes (a simple vest shape)
+    // Clothes (a simple modern vest shape)
     ctx.fillStyle = CLOTHES_COLOR;
     ctx.beginPath();
-    ctx.moveTo(x + width * 0.2, y + height * 0.5); // Top-left
-    ctx.lineTo(x + width * 0.8, y + height * 0.5); // Top-right
-    ctx.lineTo(x + width * 0.7, y + height * 0.85); // Bottom-right (slightly lower)
-    ctx.lineTo(x + width * 0.3, y + height * 0.85); // Bottom-left (slightly lower)
+    ctx.moveTo(x + width * 0.2, y + height * 0.5); // Top-left shoulder
+    ctx.lineTo(x + width * 0.8, y + height * 0.5); // Top-right shoulder
+    ctx.lineTo(x + width * 0.7, y + height * 0.9); // Bottom-right
+    ctx.lineTo(x + width * 0.3, y + height * 0.9); // Bottom-left
     ctx.closePath();
     ctx.fill();
 
     // Simple legs animation (for running effect)
-    // The 'runFrame' will create a subtle up/down movement
     let legOffset = Math.sin(runFrame * Math.PI * 2) * 2; // Sine wave for smooth motion
     
     ctx.fillStyle = FOX_BODY_COLOR; // Legs color
@@ -202,7 +204,6 @@ class Player {
         // Apply vertical animation based on jump state
         let drawY = this.y;
         if (this.velocityY !== 0 || this.y < LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height) {
-            // While jumping or falling, add a slight up/down bob
             drawY += Math.sin(Date.now() * 0.01) * 2; 
         }
 
@@ -260,10 +261,10 @@ class Obstacle {
     }
 
     draw() {
-        ctx.fillStyle = OBSTACLE_COLOR;
+        ctx.fillStyle = OBSTACLE_COLOR; // رنگ نئونی برای موانع
         if (this.type.includes('block')) {
             ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.strokeStyle = '#c62828';
+            ctx.strokeStyle = '#AD1457'; // قرمز تیره تر برای خطوط
             ctx.lineWidth = 2; 
             for (let i = 0; i < this.segments; i++) {
                 ctx.strokeRect(this.x, this.y + (this.height / this.segments) * i, this.width, this.height / this.segments);
@@ -280,7 +281,7 @@ class Obstacle {
             const segmentHeight = this.height / this.segments;
             for (let i = 0; i < this.segments; i++) {
                 ctx.fillRect(this.x, this.y + (segmentHeight * i), this.width, segmentHeight);
-                ctx.strokeStyle = '#c62828';
+                ctx.strokeStyle = '#AD1457';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(this.x, this.y + (segmentHeight * i), this.width, segmentHeight);
             }
@@ -302,7 +303,7 @@ class Cloud {
     }
 
     draw() {
-        ctx.fillStyle = CLOUD_COLOR;
+        ctx.fillStyle = CLOUD_COLOR; // رنگ نئونی برای ابرها
         drawCloudShape(this.x, this.y, this.width, this.height);
     }
 
@@ -349,44 +350,35 @@ function calculateScaleFactor() {
 
     const logicalAspectRatio = LOGICAL_CANVAS_WIDTH / LOGICAL_CANVAS_HEIGHT;
 
-    // Mobile-first approach: Calculate based on screen width
     desiredCssWidth = screenWidth * 0.98; 
 
-    // Calculate height based on width and maintain logical aspect ratio
     desiredCssHeight = desiredCssWidth / logicalAspectRatio;
 
-    // If calculated height exceeds available screen height, cap it
     const maxAvailableHeight = screenHeight * 0.85; 
     if (desiredCssHeight > maxAvailableHeight) {
         desiredCssHeight = maxAvailableHeight;
         desiredCssWidth = desiredCssHeight * logicalAspectRatio;
     }
 
-    // Cap width for desktop/larger screens
     const maxDesktopWidth = 600; 
     if (desiredCssWidth > maxDesktopWidth) {
         desiredCssWidth = maxDesktopWidth;
         desiredCssHeight = desiredCssWidth / logicalAspectRatio;
     }
 
-    // Ensure minimum dimensions for very small screens
     if (desiredCssWidth < 250) desiredCssWidth = 250;
     if (desiredCssHeight < 75) desiredCssHeight = 75;
 
 
-    // Set CSS dimensions for Canvas
     canvas.style.width = `${desiredCssWidth}px`;
     canvas.style.height = `${desiredCssHeight}px`;
 
-    // Set actual Canvas resolution for HiDPI rendering
     canvas.width = Math.floor(desiredCssWidth * dpr);
     canvas.height = Math.floor(desiredCssHeight * dpr);
 
-    // Scale the drawing context
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
-    ctx.scale(dpr, dpr); // Scale for HiDPI rendering
+    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+    ctx.scale(dpr, dpr); 
 
-    // Calculate scaleFactor for mapping logical dimensions to CSS dimensions
     scaleFactor = desiredCssWidth / LOGICAL_CANVAS_WIDTH;
     ctx.scale(scaleFactor, scaleFactor);
 
@@ -574,9 +566,9 @@ function endGame() {
     discountPercent = Math.min(discountPercent, MAX_DISCOUNT_PERCENT); 
 
     if (discountPercent > 0) {
-        discountInfoDisplay.textContent = `شما ${discountPercent.toFixed(1)}% کد تخفیف می‌گیرید!`;
+        discountInfoDisplay.innerHTML = `تبریک شما برنده کد تخفیف شدید 🤩<br>کد تخفیف: ${discountPercent.toFixed(1)}%`;
     } else {
-        discountInfoDisplay.textContent = `امتیاز شما به کد تخفیف نرسید. بیشتر تلاش کنید!`;
+        discountInfoDisplay.textContent = `ناراحت نباش و فردا برگرد، گیم رنتر همیشه تخفیف داره`;
     }
 
     if (finalScore > highScore) {
