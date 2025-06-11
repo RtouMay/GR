@@ -79,7 +79,7 @@ const MAX_DISCOUNT_PERCENT = 50; // Max 50% discount
 
 // === Daily Limit System ===
 const DAILY_LIMIT_KEY = 'gamerenter_last_play_time';
-const DAILY_LIMIT_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const DAILY_LIMIT_DURATION = 
 
 // === Sounds ===
 const jumpSound = new Audio('assets/jump.mp3');
