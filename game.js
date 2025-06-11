@@ -567,8 +567,7 @@ function endGame() {
 
     if (discountPercent > 0) {
         discountInfoDisplay.innerHTML = `تبریک شما برنده کد تخفیف شدید 🤩<br>کد تخفیف: ${discountPercent.toFixed(1)}%`;
-    } else {
-        discountInfoDisplay.textContent = `ناراحت نباش و فردا برگرد، گیم رنتر همیشه تخفیف داره`;
+
     }
 
     if (finalScore > highScore) {
