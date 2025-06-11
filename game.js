@@ -77,7 +77,9 @@ const GROUND_LINE_COLOR = '#616161'; // خطوط زمین تیره تر
 const DISCOUNT_PER_500_SCORE = 0.5; // 0.5% discount for every 500 score
 const MAX_DISCOUNT_PERCENT = 50; // Max 25% discount
 
-
+// === Daily Limit System ===
+const DAILY_LIMIT_KEY = 'gamerenter_last_play_time';
+const DAILY_LIMIT_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // === Sounds ===
 const jumpSound = new Audio('assets/jump.mp3');
