@@ -1,7 +1,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const currentScoreDisplay = document.getElementById('currentScore');
-const highScoreDisplay = document.getElementById('highScore');
+const highScoreDisplay = document('highScore');
 const gameOverScreen = document.getElementById('gameOverScreen');
 const finalScoreDisplay = document.getElementById('finalScore');
 const discountInfoDisplay = document.getElementById('discountInfo');
@@ -45,12 +45,12 @@ const FOX_START_X_RATIO = 0.15;
 const FOX_BODY_COLOR = '#ff9800'; // Fox body color
 const EYE_COLOR = 'black'; // Eye color
 const GLASSES_COLOR = 'black'; // Glasses color
-const CLOTHES_COLOR = '#F44336'; // لباس قرمز (نئونی نیست چون چشم رو می زنه)
+const CLOTHES_COLOR = '#F44336'; // Clothes color (e.g., a red vest)
 
 // === Obstacle Settings (Logical Dimensions) ===
 const BASE_OBSTACLE_MIN_GAP_LOGICAL = 150;
 const BASE_OBSTACLE_MAX_GAP_LOGICAL = 300;
-const OBSTACLE_COLOR = '#E91E63'; // قرمز نئونی ملایم
+const OBSTACLE_COLOR = '#E91E63'; // Soft neon red
 
 const BASE_OBSTACLE_TYPES = [
     { type: 'block_low', width: 20, height: 40 },
@@ -65,21 +65,24 @@ const BASE_OBSTACLE_TYPES = [
 // === Cloud Settings (Logical Dimensions) ===
 const BASE_CLOUD_WIDTH = 50;
 const BASE_CLOUD_HEIGHT = 15;
-const CLOUD_COLOR = '#90CAF9'; // آبی روشن نئونی ملایم
+const CLOUD_COLOR = '#90CAF9'; // Soft neon blue
 const BASE_CLOUD_MIN_GAP_LOGICAL = 100;
 const BASE_CLOUD_MAX_GAP_LOGICAL = 400;
 
 // === Ground Settings (Logical Dimensions) ===
-const GROUND_COLOR = '#424242'; // خاکستری تیره تر برای زمین
-const GROUND_LINE_COLOR = '#616161'; // خطوط زمین تیره تر
+const GROUND_COLOR = '#424242'; // Darker gray ground
+const GROUND_LINE_COLOR = '#616161'; // Darker gray ground lines
 
 // === Discount System ===
 const DISCOUNT_PER_500_SCORE = 0.5; // 0.5% discount for every 500 score
-const MAX_DISCOUNT_PERCENT = 50; // Max 25% discount
+const MAX_DISCOUNT_PERCENT = 50; // Max 50% discount
 
 // === Daily Limit System ===
 const DAILY_LIMIT_KEY = 'gamerenter_last_play_time';
 const DAILY_LIMIT_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+// === Game Start Threshold ===
+const OBSTACLE_START_SCORE_THRESHOLD = 20; // Obstacles start appearing after this score
 
 // === Sounds ===
 const jumpSound = new Audio('assets/jump.mp3');
@@ -97,9 +100,8 @@ function drawCloudShape(x, y, width, height) {
     ctx.closePath();
 }
 
-// Function to draw the fox with glasses and clothes
 function drawFox(x, y, width, height, runFrame) {
-    // Body (previously defined)
+    // Body 
     ctx.fillStyle = FOX_BODY_COLOR;
     ctx.beginPath();
     ctx.moveTo(x + width * 0.1, y + height);
@@ -111,12 +113,12 @@ function drawFox(x, y, width, height, runFrame) {
     ctx.closePath();
     ctx.fill();
 
-    // Head (previously defined)
+    // Head 
     ctx.beginPath();
     ctx.arc(x + width * 0.5, y + height * 0.2, width * 0.4, 0, Math.PI * 2);
     ctx.fill();
 
-    // Ears (previously defined)
+    // Ears 
     ctx.beginPath();
     ctx.moveTo(x + width * 0.2, y + height * 0.05);
     ctx.lineTo(x + width * 0.1, y - 5); 
@@ -131,7 +133,7 @@ function drawFox(x, y, width, height, runFrame) {
     ctx.closePath();
     ctx.fill();
 
-    // Glasses (black, sleek)
+    // Glasses
     ctx.fillStyle = GLASSES_COLOR;
     // Left lens frame
     ctx.fillRect(x + width * 0.28, y + height * 0.12, width * 0.18, height * 0.08); 
@@ -150,12 +152,12 @@ function drawFox(x, y, width, height, runFrame) {
     ctx.arc(x + width * 0.63, y + height * 0.16, 1.5, 0, Math.PI * 2); 
     ctx.fill();
 
-    // Nose (previously defined)
+    // Nose 
     ctx.beginPath();
     ctx.arc(x + width * 0.5, y + height * 0.25, 2, 0, Math.PI * 2); 
     ctx.fill();
 
-    // Tail (previously defined)
+    // Tail 
     ctx.fillStyle = FOX_BODY_COLOR;
     ctx.beginPath();
     ctx.moveTo(x, y + height * 0.7);
@@ -167,17 +169,17 @@ function drawFox(x, y, width, height, runFrame) {
     // Clothes (a simple modern vest shape)
     ctx.fillStyle = CLOTHES_COLOR;
     ctx.beginPath();
-    ctx.moveTo(x + width * 0.2, y + height * 0.5); // Top-left shoulder
-    ctx.lineTo(x + width * 0.8, y + height * 0.5); // Top-right shoulder
-    ctx.lineTo(x + width * 0.7, y + height * 0.9); // Bottom-right
-    ctx.lineTo(x + width * 0.3, y + height * 0.9); // Bottom-left
+    ctx.moveTo(x + width * 0.2, y + height * 0.5); 
+    ctx.lineTo(x + width * 0.8, y + height * 0.5); 
+    ctx.lineTo(x + width * 0.7, y + height * 0.9); 
+    ctx.lineTo(x + width * 0.3, y + height * 0.9); 
     ctx.closePath();
     ctx.fill();
 
     // Simple legs animation (for running effect)
-    let legOffset = Math.sin(runFrame * Math.PI * 2) * 2; // Sine wave for smooth motion
+    let legOffset = Math.sin(runFrame * Math.PI * 2) * 2; 
     
-    ctx.fillStyle = FOX_BODY_COLOR; // Legs color
+    ctx.fillStyle = FOX_BODY_COLOR; 
     // Front leg
     ctx.fillRect(x + width * 0.25, y + height * 0.9 + legOffset, 5, 10);
     // Back leg
@@ -196,29 +198,27 @@ class Player {
         this.velocityY = 0;
         this.jumps = 0;
         this.maxJumps = 2;
-        this.runFrame = 0; // Current frame for running animation
-        this.runSpeed = 0.1; // Speed of run animation
+        this.runFrame = 0; 
+        this.runSpeed = 0.1; 
     }
 
     draw() {
-        // Apply vertical animation based on jump state
         let drawY = this.y;
         if (this.velocityY !== 0 || this.y < LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height) {
             drawY += Math.sin(Date.now() * 0.01) * 2; 
         }
 
-        // Apply slight rotation for jump/fall effect
-        ctx.save(); // Save current canvas state
+        ctx.save(); 
         let rotationAngle = 0;
-        if (this.velocityY < 0) { // Jumping up
-            rotationAngle = -Math.PI / 30; // Slight backward tilt
-        } else if (this.velocityY > 0 && this.y < LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height - 5) { // Falling down
-            rotationAngle = Math.PI / 30; // Slight forward tilt
+        if (this.velocityY < 0) { 
+            rotationAngle = -Math.PI / 30; 
+        } else if (this.velocityY > 0 && this.y < LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height - 5) { 
+            rotationAngle = Math.PI / 30; 
         }
         ctx.translate(this.x + this.width / 2, drawY + this.height / 2);
         ctx.rotate(rotationAngle);
         drawFox(-this.width / 2, -this.height / 2, this.width, this.height, this.runFrame);
-        ctx.restore(); // Restore canvas state
+        ctx.restore(); 
 
     }
 
@@ -230,9 +230,9 @@ class Player {
             this.y = LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height;
             this.velocityY = 0;
             this.jumps = 0;
-            this.runFrame = (this.runFrame + this.runSpeed) % 1; // Update run frame
+            this.runFrame = (this.runFrame + this.runSpeed) % 1; 
         } else {
-            this.runFrame = 0; // Stop running animation in air
+            this.runFrame = 0; 
         }
     }
 
@@ -261,10 +261,10 @@ class Obstacle {
     }
 
     draw() {
-        ctx.fillStyle = OBSTACLE_COLOR; // رنگ نئونی برای موانع
+        ctx.fillStyle = OBSTACLE_COLOR; 
         if (this.type.includes('block')) {
             ctx.fillRect(this.x, this.y, this.width, this.height);
-            ctx.strokeStyle = '#AD1457'; // قرمز تیره تر برای خطوط
+            ctx.strokeStyle = '#AD1457'; 
             ctx.lineWidth = 2; 
             for (let i = 0; i < this.segments; i++) {
                 ctx.strokeRect(this.x, this.y + (this.height / this.segments) * i, this.width, this.height / this.segments);
@@ -303,7 +303,7 @@ class Cloud {
     }
 
     draw() {
-        ctx.fillStyle = CLOUD_COLOR; // رنگ نئونی برای ابرها
+        ctx.fillStyle = CLOUD_COLOR; 
         drawCloudShape(this.x, this.y, this.width, this.height);
     }
 
@@ -460,6 +460,11 @@ function initGame() {
 }
 
 function generateObstacle() {
+    // Only generate obstacles if score is above the threshold
+    if (Math.floor(score / 10) < OBSTACLE_START_SCORE_THRESHOLD) {
+        return; // Don't generate obstacles yet
+    }
+
     const currentTime = Date.now();
     const lastObstacle = obstacles[obstacles.length - 1];
     const timeSinceLastObstacle = currentTime - lastObstacleTime;
@@ -567,7 +572,8 @@ function endGame() {
 
     if (discountPercent > 0) {
         discountInfoDisplay.innerHTML = `تبریک شما برنده کد تخفیف شدید 🤩<br>کد تخفیف: ${discountPercent.toFixed(1)}%`;
-
+    } else {
+        discountInfoDisplay.textContent = `ناراحت نباش و فردا برگرد، گیم رنتر همیشه تخفیف داره`;
     }
 
     if (finalScore > highScore) {
