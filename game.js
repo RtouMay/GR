@@ -4,54 +4,59 @@ const currentScoreDisplay = document.getElementById('currentScore');
 const highScoreDisplay = document.getElementById('highScore');
 const gameOverScreen = document.getElementById('gameOverScreen');
 const finalScoreDisplay = document.getElementById('finalScore');
+const discountInfoDisplay = document.getElementById('discountInfo'); // عنصر جدید برای تخفیف
 const restartButton = document.getElementById('restartButton');
+const dailyLimitScreen = document.getElementById('dailyLimitScreen'); // صفحه محدودیت روزانه
+const dailyLimitTimeDisplay = document.getElementById('dailyLimitTime'); // نمایش زمان باقی مانده
+const closeLimitButton = document.getElementById('closeLimitButton'); // دکمه بستن محدودیت
 
 // === متغیرهای بازی ===
 let player;
 let obstacles = [];
 let clouds = [];
-let groundTiles = []; // فقط برای افکت زمین
+let groundTiles = [];
 let score = 0;
 let highScore = parseInt(localStorage.getItem('dinoHighScore') || '0', 10);
-let gameSpeed = 0; // سرعت در initGame مقداردهی می‌شود
+let gameSpeed = 0;
 let gameOver = false;
 let frameId;
 let lastObstacleTime = 0;
 let lastCloudTime = 0;
 
 // === ابعاد پایه منطقی برای طراحی بازی (Portrait Mobile-First) ===
-// بازی برای این ابعاد طراحی شده است.
-// همه اشیاء، سرعت‌ها و موقعیت‌ها نسبت به این ابعاد منطقی هستند.
-const LOGICAL_CANVAS_WIDTH = 320; 
-const LOGICAL_CANVAS_HEIGHT = 480; // ارتفاع پایه بزرگتر برای Portrait
-const LOGICAL_GROUND_Y_OFFSET = 50; // فاصله زمین از پایین (پایین‌تر از قبل)
+const LOGICAL_CANVAS_WIDTH = 320;
+const LOGICAL_CANVAS_HEIGHT = 480;
+const LOGICAL_GROUND_Y_OFFSET = 50; 
 
 // === ابعاد و متغیرهای واقعی Canvas (بر اساس مقیاس‌بندی) ===
 let currentCanvasWidth = LOGICAL_CANVAS_WIDTH;
 let currentCanvasHeight = LOGICAL_CANVAS_HEIGHT;
-let scaleFactor = 1; // ضریب مقیاس‌بندی از ابعاد منطقی به ابعاد واقعی Canvas
+let scaleFactor = 1;
 
 // === تنظیمات عمومی (بر اساس ابعاد منطقی) ===
-const BASE_JUMP_VELOCITY = -15; // سرعت پرش بیشتر برای ارتفاع بلندتر
-const BASE_GRAVITY = 0.8; // جاذبه بیشتر
+const BASE_JUMP_VELOCITY = -15; // سرعت پرش
+const BASE_GRAVITY = 0.8; // جاذبه
 const BASE_GAME_SPEED = 5; // سرعت پایه بازی
 
 // === تنظیمات شخصیت روباه (بر اساس ابعاد منطقی) ===
-const BASE_FOX_WIDTH = 30; 
+const BASE_FOX_WIDTH = 30;
 const BASE_FOX_HEIGHT = 35;
-const FOX_START_X_RATIO = 0.15; // کمی به سمت چپ برای شروع
+const FOX_START_X_RATIO = 0.15; // موقعیت X شروع روباه
+const FOX_COLOR = '#ff9800'; // رنگ بدن روباه
+const HEADPHONE_COLOR = '#00bcd4'; // آبی برای هدفون
+const CLOTHES_COLOR = '#4CAF50'; // سبز برای لباس (مثلاً یک کوله پشتی یا جلیقه)
 
 // === تنظیمات موانع (بر اساس ابعاد منطقی) ===
-const BASE_OBSTACLE_MIN_GAP_LOGICAL = 150; // حداقل فاصله بین موانع (پیکسل منطقی)
-const BASE_OBSTACLE_MAX_GAP_LOGICAL = 300; // حداکثر فاصله بین موانع (پیکسل منطقی)
+const BASE_OBSTACLE_MIN_GAP_LOGICAL = 150;
+const BASE_OBSTACLE_MAX_GAP_LOGICAL = 300;
 const OBSTACLE_COLOR = '#ff1744';
 
 const BASE_OBSTACLE_TYPES = [
-    { type: 'block_low', width: 20, height: 40 }, // ابعاد موانع
+    { type: 'block_low', width: 20, height: 40 },
     { type: 'block_medium', width: 20, height: 60 },
     { type: 'block_high', width: 20, height: 80 },
-    { type: 'flying_low', width: 40, height: 20, yOffset: 120 }, // پرنده در ارتفاع پایین‌تر
-    { type: 'flying_mid', width: 40, height: 20, yOffset: 200 }, // پرنده در ارتفاع میانی
+    { type: 'flying_low', width: 40, height: 20, yOffset: 120 },
+    { type: 'flying_mid', width: 40, height: 20, yOffset: 200 },
     { type: 'stacked_2', width: 20, height: 70, segments: 2 },
     { type: 'stacked_3', width: 20, height: 100, segments: 3 }
 ];
@@ -60,12 +65,20 @@ const BASE_OBSTACLE_TYPES = [
 const BASE_CLOUD_WIDTH = 50;
 const BASE_CLOUD_HEIGHT = 15;
 const CLOUD_COLOR = '#b0bec5';
-const BASE_CLOUD_MIN_GAP_LOGICAL = 100; 
+const BASE_CLOUD_MIN_GAP_LOGICAL = 100;
 const BASE_CLOUD_MAX_GAP_LOGICAL = 400;
 
 // === تنظیمات زمین (بر اساس ابعاد منطقی) ===
 const GROUND_COLOR = '#555';
 const GROUND_LINE_COLOR = '#666';
+
+// === سیستم تخفیف ===
+const DISCOUNT_PER_500_SCORE = 0.5; // 0.5 درصد برای هر 500 امتیاز
+const MAX_DISCOUNT_PERCENT = 50; // حداکثر تخفیف 50%
+
+// === سیستم محدودیت بازی روزانه ===
+const DAILY_LIMIT_KEY = 'gamerenter_last_play_time';
+const DAILY_LIMIT_DURATION = 24 * 60 * 60 * 1000; // 24 ساعت بر حسب میلی‌ثانیه
 
 // === صداها (اگر فایل mp3 ها در پوشه assets باشند) ===
 const jumpSound = new Audio('assets/jump.mp3');
@@ -83,12 +96,10 @@ function drawCloudShape(x, y, width, height) {
     ctx.closePath();
 }
 
+// تابع رسم روباه با جزئیات بیشتر (هدفون و لباس)
 function drawFox(x, y, width, height) {
-    const FOX_COLOR = '#ff9800'; // نارنجی برای روباه
-
+    // بدن روباه (کد قبلی)
     ctx.fillStyle = FOX_COLOR;
-
-    // بدن
     ctx.beginPath();
     ctx.moveTo(x + width * 0.1, y + height);
     ctx.lineTo(x + width * 0.9, y + height);
@@ -99,12 +110,12 @@ function drawFox(x, y, width, height) {
     ctx.closePath();
     ctx.fill();
 
-    // سر
+    // سر روباه (کد قبلی)
     ctx.beginPath();
     ctx.arc(x + width * 0.5, y + height * 0.2, width * 0.4, 0, Math.PI * 2);
     ctx.fill();
 
-    // گوش‌ها (ابعاد کوچک)
+    // گوش‌ها (کد قبلی)
     ctx.beginPath();
     ctx.moveTo(x + width * 0.2, y + height * 0.05);
     ctx.lineTo(x + width * 0.1, y - 5); 
@@ -119,24 +130,44 @@ function drawFox(x, y, width, height) {
     ctx.closePath();
     ctx.fill();
 
-    // چشم‌ها (ابعاد کوچک)
+    // چشم‌ها (کد قبلی)
     ctx.fillStyle = 'black';
     ctx.beginPath();
     ctx.arc(x + width * 0.4, y + height * 0.15, 2, 0, Math.PI * 2); 
     ctx.arc(x + width * 0.6, y + height * 0.15, 2, 0, Math.PI * 2); 
     ctx.fill();
 
-    // بینی (ابعاد کوچک)
+    // بینی (کد قبلی)
     ctx.beginPath();
     ctx.arc(x + width * 0.5, y + height * 0.25, 2, 0, Math.PI * 2); 
     ctx.fill();
 
-    // دم (ابعاد کوچک)
+    // دم (کد قبلی)
     ctx.fillStyle = FOX_COLOR;
     ctx.beginPath();
     ctx.moveTo(x, y + height * 0.7);
     ctx.lineTo(x - 10, y + height * 0.5); 
     ctx.lineTo(x, y + height * 0.3);
+    ctx.closePath();
+    ctx.fill();
+
+    // === جزئیات جدید: هدفون ===
+    ctx.fillStyle = HEADPHONE_COLOR;
+    // نوار بالای سر
+    ctx.fillRect(x + width * 0.3, y - 5, width * 0.4, 3);
+    // گوش‌های هدفون
+    ctx.beginPath();
+    ctx.arc(x + width * 0.25, y + height * 0.08, 4, 0, Math.PI * 2);
+    ctx.arc(x + width * 0.75, y + height * 0.08, 4, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // === جزئیات جدید: لباس (مثلاً یک جلیقه ساده) ===
+    ctx.fillStyle = CLOTHES_COLOR;
+    ctx.beginPath();
+    ctx.moveTo(x + width * 0.2, y + height * 0.5);
+    ctx.lineTo(x + width * 0.8, y + height * 0.5);
+    ctx.lineTo(x + width * 0.7, y + height * 0.8);
+    ctx.lineTo(x + width * 0.3, y + height * 0.8);
     ctx.closePath();
     ctx.fill();
 }
@@ -153,10 +184,16 @@ class Player {
         this.velocityY = 0;
         this.jumps = 0;
         this.maxJumps = 2;
+        this.isAnimating = false; // برای انیمیشن جزئی پرش
     }
 
     draw() {
-        drawFox(this.x, this.y, this.width, this.height);
+        // اگر در حال پرش هست، کمی بالا پایین بشه
+        let drawY = this.y;
+        if (this.isAnimating) {
+            drawY += Math.sin(Date.now() * 0.01) * 2; // انیمیشن موجی
+        }
+        drawFox(this.x, drawY, this.width, this.height);
     }
 
     update() {
@@ -167,6 +204,9 @@ class Player {
             this.y = LOGICAL_CANVAS_HEIGHT - LOGICAL_GROUND_Y_OFFSET - this.height;
             this.velocityY = 0;
             this.jumps = 0;
+            this.isAnimating = false;
+        } else {
+            this.isAnimating = true; // در هوا در حال انیمیشن است
         }
     }
 
@@ -174,6 +214,7 @@ class Player {
         if (this.jumps < this.maxJumps) {
             this.velocityY = BASE_JUMP_VELOCITY;
             this.jumps++;
+            this.isAnimating = true; // شروع انیمیشن پرش
             jumpSound.currentTime = 0;
             jumpSound.play().catch(e => console.log("Jump sound play failed:", e));
         }
@@ -258,6 +299,7 @@ class Ground {
         ctx.fillStyle = GROUND_COLOR;
         ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fillStyle = GROUND_LINE_COLOR;
+        // خطوط راهرو روی زمین
         for (let i = 0; i < this.width; i += (LOGICAL_CANVAS_WIDTH / 40)) {
             ctx.fillRect(this.x + i, this.y + 5, LOGICAL_CANVAS_WIDTH / 100, 2);
         }
@@ -285,7 +327,6 @@ function calculateScaleFactor() {
     const logicalAspectRatio = LOGICAL_CANVAS_WIDTH / LOGICAL_CANVAS_HEIGHT;
 
     // رویکرد موبایل-فرست: بر اساس عرض صفحه محاسبه می‌کنیم
-    // در حالت Portrait، عرض صفحه محدودتر است.
     desiredCssWidth = screenWidth * 0.98; // 98% از عرض صفحه برای Portrait
 
     // محاسبه ارتفاع بر اساس عرض و حفظ نسبت ابعاد منطقی
@@ -293,21 +334,18 @@ function calculateScaleFactor() {
 
     // اگر ارتفاع محاسبه شده (بعد از لحاظ کردن عرض) از ارتفاع موجود صفحه بیشتر بود،
     // ارتفاع را محدود می‌کنیم و عرض را دوباره بر اساس آن تنظیم می‌کنیم.
-    // این برای اطمینان از جا شدن در صفحه موبایل (به خصوص در حالت عمودی) است.
-    const maxAvailableHeight = screenHeight * 0.85; // 85% از ارتفاع صفحه برای Canvas (فضای UI بالا و پایین)
+    const maxAvailableHeight = screenHeight * 0.85; // 85% از ارتفاع صفحه برای Canvas
     if (desiredCssHeight > maxAvailableHeight) {
         desiredCssHeight = maxAvailableHeight;
         desiredCssWidth = desiredCssHeight * logicalAspectRatio;
     }
 
     // اگر در حالت افقی (Landscape) بودیم یا دسکتاپ، عرض را محدود می‌کنیم.
-    // این از بزرگ شدن بیش از حد Canvas روی صفحه‌های عریض جلوگیری می‌کند.
-    const maxDesktopWidth = 600; // حداکثر عرض در دسکتاپ
+    const maxDesktopWidth = 600; 
     if (desiredCssWidth > maxDesktopWidth) {
         desiredCssWidth = maxDesktopWidth;
         desiredCssHeight = desiredCssWidth / logicalAspectRatio;
     }
-
 
     // اطمینان از حداقل ابعاد (برای صفحه‌های خیلی کوچک)
     if (desiredCssWidth < 250) desiredCssWidth = 250;
@@ -328,7 +366,7 @@ function calculateScaleFactor() {
 
     // محاسبه scaleFactor برای نگاشت از ابعاد منطقی به ابعاد CSS
     scaleFactor = desiredCssWidth / LOGICAL_CANVAS_WIDTH;
-    ctx.scale(scaleFactor, scaleFactor); // مقیاس‌بندی از ابعاد منطقی به ابعاد CSS
+    ctx.scale(scaleFactor, scaleFactor);
 
 
     console.log(`Viewport: ${screenWidth}x${screenHeight}`);
@@ -340,8 +378,52 @@ function calculateScaleFactor() {
 }
 
 
+// === توابع محدودیت بازی روزانه ===
+function checkDailyLimit() {
+    const lastPlayTime = localStorage.getItem(DAILY_LIMIT_KEY);
+    if (!lastPlayTime) {
+        return { allowed: true };
+    }
+
+    const lastTime = parseInt(lastPlayTime, 10);
+    const currentTime = Date.now();
+    const elapsedTime = currentTime - lastTime;
+
+    if (elapsedTime >= DAILY_LIMIT_DURATION) {
+        return { allowed: true };
+    } else {
+        const remainingTime = DAILY_LIMIT_DURATION - elapsedTime;
+        const hours = Math.floor(remainingTime / (1000 * 60 * 60));
+        const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+        return {
+            allowed: false,
+            remaining: `${hours}h ${minutes}m ${seconds}s`
+        };
+    }
+}
+
+function setDailyLimit() {
+    localStorage.setItem(DAILY_LIMIT_KEY, Date.now().toString());
+}
+
+// === توابع اصلی بازی ===
+
 function initGame() {
     console.log("Initializing game...");
+    const limitStatus = checkDailyLimit();
+
+    if (!limitStatus.allowed) {
+        // اگر محدودیت اعمال شده، صفحه محدودیت رو نشون بده
+        dailyLimitTimeDisplay.textContent = limitStatus.remaining;
+        dailyLimitScreen.style.display = 'flex';
+        canvas.classList.add('game-over'); // خاموش کردن بوم اصلی
+        return; // بازی رو شروع نکن
+    } else {
+        dailyLimitScreen.style.display = 'none'; // مطمئن شو که صفحه محدودیت مخفیه
+    }
+
+
     calculateScaleFactor(); // محاسبه و اعمال مقیاس‌بندی در ابتدا
 
     player = new Player();
@@ -353,6 +435,7 @@ function initGame() {
     currentScoreDisplay.textContent = score;
     highScoreDisplay.textContent = highScore;
     gameOverScreen.style.display = 'none';
+    canvas.classList.remove('game-over'); // روشن کردن بوم
 
     // ایجاد تایل‌های زمین - با ابعاد منطقی
     groundTiles = [];
@@ -443,7 +526,6 @@ function updateGame() {
 }
 
 function drawGame() {
-    // پاک کردن بوم با ابعاد منطقی، چون ctx.scale قبلاً اعمال شده
     ctx.clearRect(0, 0, LOGICAL_CANVAS_WIDTH, LOGICAL_CANVAS_HEIGHT); 
 
     clouds.forEach(cloud => cloud.draw());
@@ -463,9 +545,21 @@ function gameLoop() {
 function endGame() {
     gameOver = true;
     hitSound.play().catch(e => console.log("Hit sound play failed:", e));
+    setDailyLimit(); // ثبت زمان پایان بازی برای محدودیت روزانه
 
     const finalScore = Math.floor(score / 10);
     finalScoreDisplay.textContent = `امتیاز نهایی: ${finalScore}`;
+
+    // محاسبه تخفیف
+    let discountPercent = Math.floor(finalScore / 500) * DISCOUNT_PER_500_SCORE;
+    discountPercent = Math.min(discountPercent, MAX_DISCOUNT_PERCENT); // اعمال حداکثر تخفیف
+
+    if (discountPercent > 0) {
+        discountInfoDisplay.textContent = `شما ${discountPercent.toFixed(1)}% کد تخفیف می‌گیرید!`;
+    } else {
+        discountInfoDisplay.textContent = `امتیاز شما به کد تخفیف نرسید. بیشتر تلاش کنید!`;
+    }
+
 
     if (finalScore > highScore) {
         highScore = finalScore;
@@ -473,12 +567,13 @@ function endGame() {
         highScoreDisplay.textContent = highScore;
     }
     gameOverScreen.style.display = 'flex';
+    canvas.classList.add('game-over'); // اضافه کردن کلاس game-over به canvas برای جلوه بصری
     cancelAnimationFrame(frameId);
 }
 
 // === مدیریت رویدادها ===
 
-window.addEventListener('resize', initGame);
+window.addEventListener('resize', initGame); // در صورت تغییر اندازه، بازی را دوباره مقداردهی اولیه کن
 
 document.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
@@ -501,6 +596,10 @@ canvas.addEventListener('touchstart', (e) => {
 
 restartButton.addEventListener('click', () => {
     initGame();
+});
+
+closeLimitButton.addEventListener('click', () => {
+    dailyLimitScreen.style.display = 'none'; // بستن صفحه محدودیت
 });
 
 // شروع اولیه بازی
